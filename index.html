@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coptic Synaxarium API</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f8f8f8; color: #222; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 30px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 1.5em; }
+        h1 { color: #2c3e50; }
+        a { color: #0077cc; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .tryout { margin-top: 1.5em; padding: 1em; background: #f0f4fa; border-radius: 6px; }
+        label { display: block; margin-top: 1em; }
+        input, select { padding: 0.4em; margin-top: 0.2em; width: 100%; max-width: 250px; }
+        button { margin-top: 1em; padding: 0.5em 1em; background: #0077cc; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #005fa3; }
+        pre { background: #f4f4f4; padding: 0.8em; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Coptic Synaxarium API</h1>
+        <p>
+            HELLO!!! Welcome to the Coptic Synaxarium API.<br><br>
+            <b>How to use:</b> Type a date below and hit the button. You'll see the result instantly. No login, no nonsense. Oh, you can also make a GET request to <code>/synaxarium?date_gregorian=YYYY-MM-DD</code> or <code>/synaxarium?date_coptic=DAY+MONTH</code> to get the Coptic Synaxarium entry for that date.<br><br>
+            <b>What is the Coptic Synaxarium?</b> It's like a calendar of saints and feasts in the Coptic Orthodox Church. Each day has stories about saints, martyrs, and important events. This API gives you those stories based on the date you provide.
+        </p>
+        <ul>
+            <li>Data: <a href="https://github.com/randogoth/coptic-synaxarium" target="_blank">randogoth/coptic-synaxarium</a> (the readings themselves, in JSON format)
+                <br><span style="color:#666;font-size:0.97em;">This is a fantastic open-source project with the full Synaxarium in JSON. Please check it out!</span>
+            </li>
+            <li>Date logic: <a href="https://github.com/abanobmikaeel/coptic.io" target="_blank">coptic.io</a> (for the calendar math, but I rewrote it in Python and made it more accurate!)
+                <br><span style="color:#666;font-size:0.97em;">coptic.io is an amazing Coptic calendar tool and open-source project. Visit their site and GitHub for more features, and consider supporting or contributing!</span>
+            </li>
+        </ul>
+        <div class="tryout">
+            <h2>Try it out</h2>
+            <form id="gregorian-form">
+                <label for="gregorian-date">Gregorian Date:</label>
+                <input type="date" id="gregorian-date" name="gregorian-date" required>
+                <button type="submit">Get Entry</button>
+            </form>
+            <form id="coptic-form">
+                <label for="coptic-day">Coptic Date:</label>
+                <input type="text" id="coptic-coptic" name="coptic-coptic" placeholder="e.g. 2+Bashons" required>
+                <button type="submit">Get Entry</button>
+            </form>
+            <div id="result"></div>
+            <div style="margin-top:1em; color:#444; font-size:0.97em;">
+                <b>Example response:</b>
+                <pre>{
+  "coptic_date": { "day": 22, "month": 8, "monthString": "Bashans", "year": 1741 },
+  "gregorian_date": "2025-05-30",
+  "feasts": ["The Departure of St. Erastus, the Apostle."],
+  "description": "<p>On this day, St. Erastus..." 
+}</pre>
+            </div>
+        </div>
+        <p style="margin-top:1.5em; color:#555; font-size:1em;">
+            <b>May the saints intercede for you! (and may your code run bug-free hehe)</b><br>
+        </p>
+        <div class="nerdy">
+            <h2>Nerdy Stuff</h2>
+            <ul>
+                <li><b>Language:</b> Python 3.12</li>
+                <li><b>Framework:</b> FastAPI (super fast, async, and easy to use)</li>
+                <li><b>Server:</b> Uvicorn (ASGI, so it's modern and cool)</li>
+                <li><b>Frontend:</b> Just plain HTML + JS, no React or anything fancy</li>
+                <li><b>Data:</b> Loads <code>synaxarium.json</code> at startup (so it's fast, but you gotta restart if you change the file)</li>
+                <li><b>Date conversion:</b> Uses Julian Day Number (JDN) math. First, it turns your Gregorian date into a JDN (using a formula from astronomy), then figures out how many days since the Coptic years begun (August 29, 284 AD, Julian calendar). Then it does some math to get the Coptic year, month, and day. Handles leap years the Coptic way (every 4th year, no exceptions).</li>
+                <li><b>Endpoints:</b> <code>/synaxarium?date_gregorian=YYYY-MM-DD</code> and <code>/synaxarium?date_coptic=DAY+MONTH</code></li>
+                <li><b>Response:</b> Always gives both Coptic and Gregorian date, plus feasts and description if found. If not, you get a friendly message.</li>
+                <li><b>CORS:</b> On for all origins (so you can use it in your own web stuff, no problem)</li>
+                <li><b>Dependencies:</b> fastapi, uvicorn, python-multipart, jinja2</li>
+                <li><b>Source:</b> <a href="https://github.com/jeninh/synaxarium-api" target="_blank">github.com/jeninh/synaxarium-api</a></li>
+            </ul>
+            <p style="margin-top:1em; color:#888; font-size:0.97em;">MIT license. PRs and issues welcome. If you find a bug, congrats, you get a virtual high five!</p>
+        </div>
+    </div>
+    <script>
+        document.getElementById('gregorian-form').onsubmit = async function(e) {
+            e.preventDefault();
+            const date = document.getElementById('gregorian-date').value;
+            if (!date) return;
+            const res = await fetch(`/synaxarium?date_gregorian=${date}`);
+            const data = await res.json();
+            document.getElementById('result').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        };
+        document.getElementById('coptic-form').onsubmit = async function(e) {
+            e.preventDefault();
+            const coptic = document.getElementById('coptic-coptic').value;
+            if (!coptic) return;
+            const res = await fetch(`/synaxarium?date_coptic=${encodeURIComponent(coptic)}`);
+            const data = await res.json();
+            document.getElementById('result').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        };
+    </script>
+</body>
+</html>
